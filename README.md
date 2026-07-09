@@ -207,6 +207,18 @@ netpol-intelligence/
 
 ---
 
+## 📸 Screenshots
+
+| Compliance Report | AI Assistant |
+|---|---|
+| ![compliance](docs/screenshots/compliance-report.png) | ![assistant](docs/screenshots/ai-assistant.png) |
+
+| Grafana — Policy Violations | Anomaly Timeline |
+|---|---|
+| ![grafana](docs/screenshots/grafana-violations.png) | ![timeline](docs/screenshots/anomaly-timeline.png) |
+
+---
+
 ## ⚠️ Known Operational Behaviours
 
 - `oc start-build` does **not** auto-cycle running pods — always follow with `oc rollout restart`
