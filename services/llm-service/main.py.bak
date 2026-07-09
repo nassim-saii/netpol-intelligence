@@ -1,0 +1,210 @@
+import os
+import time
+import logging
+import hashlib
+import json
+import psycopg2
+import psycopg2.extras
+from datetime import datetime, timezone
+from prompts import ANOMALY_PROMPT, AUDIT_PROMPT
+from client import call_ollama, check_ollama_health
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s"
+)
+log = logging.getLogger(__name__)
+
+DB_URL        = os.environ["DATABASE_URL"]
+POLL_INTERVAL = int(os.environ.get("POLL_INTERVAL", "300"))   # 5 minutes
+BATCH_SIZE    = int(os.environ.get("BATCH_SIZE", "3"))         # items per cycle
+MODEL         = "llama3.2:3b"
+
+
+def get_conn():
+    return psycopg2.connect(DB_URL)
+
+
+def already_analyzed(cur, source_type: str, source_id: int) -> bool:
+    cur.execute(
+        "SELECT 1 FROM llm_analyses WHERE source_type=%s AND source_id=%s LIMIT 1",
+        (source_type, source_id)
+    )
+    return cur.fetchone() is not None
+
+
+def already_analyzed_similar(cur, row, window_hours: int = 6) -> bool:
+    """Skip if same anomaly pattern was analyzed recently."""
+    cur.execute("""
+        SELECT 1 FROM llm_analyses la
+        JOIN anomaly_events ae ON la.source_id = ae.id AND la.source_type = 'anomaly'
+        WHERE ae.anomaly_type = %s
+          AND ae.src_namespace = %s
+          AND ae.dst_namespace = %s
+          AND ae.dst_port = %s
+          AND la.time > NOW() - INTERVAL '%s hours'
+        LIMIT 1
+    """, (row["anomaly_type"], row["src_namespace"],
+          row["dst_namespace"], row["dst_port"], window_hours))
+    return cur.fetchone() is not None
+
+
+def store_analysis(cur, source_type: str, source_id: int,
+                   prompt: str, response: dict, latency_ms: int):
+    prompt_hash = hashlib.md5(prompt.encode()).hexdigest()
+    cur.execute("""
+        INSERT INTO llm_analyses
+          (time, source_type, source_id, model, prompt_hash, response, latency_ms)
+        VALUES (NOW(), %s, %s, %s, %s, %s, %s)
+    """, (
+        source_type, source_id, MODEL,
+        prompt_hash, json.dumps(response), latency_ms
+    ))
+
+
+def process_anomalies(conn):
+    """Analyze unprocessed anomaly_events."""
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("""
+            SELECT id, anomaly_type, rule_id, src_namespace, dst_namespace,
+                   dst_port, z_score, severity, description, time
+            FROM anomaly_events
+            ORDER BY time DESC
+            LIMIT %s
+        """, (BATCH_SIZE * 3,))
+        rows = cur.fetchall()
+
+    processed = 0
+    with conn.cursor() as cur:
+        for row in rows:
+            if processed >= BATCH_SIZE:
+                break
+            if already_analyzed(cur, "anomaly", row["id"]):
+                continue
+            if already_analyzed_similar(cur, row, window_hours=6):
+                log.debug("Skipping similar anomaly id=%d [%s] %s->%s:%s (analyzed within 6h)",
+                          row["id"], row["severity"],
+                          row["src_namespace"], row["dst_namespace"], row["dst_port"])
+                continue
+
+            prompt = ANOMALY_PROMPT.format(
+                anomaly_type = row["anomaly_type"] or "",
+                rule_id      = row["rule_id"] or "",
+                src_namespace= row["src_namespace"] or "",
+                dst_namespace= row["dst_namespace"] or "",
+                dst_port     = row["dst_port"] or 0,
+                severity     = row["severity"] or "",
+                description  = row["description"] or "",
+                z_score      = row["z_score"] or "N/A",
+                detected_at  = str(row["time"])
+            )
+
+            log.info("Analyzing anomaly id=%d [%s] %s->%s:%s",
+                     row["id"], row["severity"],
+                     row["src_namespace"], row["dst_namespace"], row["dst_port"])
+
+            t0 = time.time()
+            response = call_ollama(prompt)
+            latency  = int((time.time() - t0) * 1000)
+
+            store_analysis(cur, "anomaly", row["id"], prompt, response, latency)
+            conn.commit()
+            processed += 1
+            log.info("Anomaly id=%d analyzed in %dms — priority=%s",
+                     row["id"], latency, response.get("priority", "?"))
+
+    return processed
+
+
+def process_audit_findings(conn):
+    """Analyze unprocessed HIGH/CRITICAL audit_findings."""
+    with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute("""
+            SELECT id, rule_id, namespace, severity, policy_name, message, time
+            FROM audit_findings
+            WHERE severity IN ('CRITICAL', 'HIGH')
+            ORDER BY time DESC
+            LIMIT %s
+        """, (BATCH_SIZE * 3,))
+        rows = cur.fetchall()
+
+    processed = 0
+    with conn.cursor() as cur:
+        for row in rows:
+            if processed >= BATCH_SIZE:
+                break
+            if already_analyzed(cur, "audit", row["id"]):
+                continue
+
+            prompt = AUDIT_PROMPT.format(
+                rule_id    = row["rule_id"] or "",
+                namespace  = row["namespace"] or "",
+                severity   = row["severity"] or "",
+                policy_name= row["policy_name"] or "N/A",
+                message    = row["message"] or "",
+                detected_at= str(row["time"])
+            )
+
+            log.info("Analyzing audit finding id=%d [%s] ns=%s rule=%s",
+                     row["id"], row["severity"], row["namespace"], row["rule_id"])
+
+            t0 = time.time()
+            response = call_ollama(prompt)
+            latency  = int((time.time() - t0) * 1000)
+
+            store_analysis(cur, "audit", row["id"], prompt, response, latency)
+            conn.commit()
+            processed += 1
+            log.info("Audit id=%d analyzed in %dms — priority=%s",
+                     row["id"], latency, response.get("priority", "?"))
+
+    return processed
+
+
+def main():
+    log.info("LLM Analysis Service starting — poll=%ds batch=%d model=%s",
+             POLL_INTERVAL, BATCH_SIZE, MODEL)
+
+    # Wait for DB
+    conn = None
+    while conn is None:
+        try:
+            conn = get_conn()
+            log.info("DB connection OK")
+        except Exception as e:
+            log.warning("DB not ready: %s — retry in 10s", e)
+            time.sleep(10)
+
+    # Wait for Ollama
+    log.info("Waiting for Ollama at llm-system...")
+    while not check_ollama_health():
+        log.warning("Ollama not ready — retry in 15s")
+        time.sleep(15)
+    log.info("Ollama is ready")
+
+    while True:
+        try:
+            a = process_anomalies(conn)
+            f = process_audit_findings(conn)
+            log.info("Cycle complete: %d anomalies + %d audit findings analyzed", a, f)
+        except psycopg2.OperationalError as e:
+            log.error("DB lost: %s — reconnecting", e)
+            try:
+                conn.close()
+            except Exception:
+                pass
+            conn = None
+            while conn is None:
+                try:
+                    conn = get_conn()
+                except Exception as e2:
+                    log.error("Reconnect failed: %s", e2)
+                    time.sleep(10)
+        except Exception as e:
+            log.error("Unexpected error: %s", e, exc_info=True)
+
+        time.sleep(POLL_INTERVAL)
+
+
+if __name__ == "__main__":
+    main()

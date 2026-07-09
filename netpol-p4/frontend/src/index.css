@@ -1,0 +1,23 @@
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--bg-card:#161b22;--bg-card2:#1c2128;--border:#30363d;
+  --text:#e6edf3;--text-muted:#8b949e;--accent:#58a6ff;
+  --critical:#f85149;--high:#ff7b72;--medium:#d29922;--low:#3fb950;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.badge.CRITICAL{background:rgba(248,81,73,.2);color:var(--critical);border:1px solid rgba(248,81,73,.4)}
+.badge.HIGH{background:rgba(255,123,114,.15);color:var(--high);border:1px solid rgba(255,123,114,.3)}
+.badge.MEDIUM{background:rgba(210,153,34,.15);color:#d29922;border:1px solid rgba(210,153,34,.3)}
+.badge.LOW{background:rgba(63,185,80,.15);color:var(--low);border:1px solid rgba(63,185,80,.3)}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px}
+.spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+table{border-collapse:collapse;width:100%}
+th{text-align:left;padding:8px 12px;color:var(--text-muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+td{padding:8px 12px;border-bottom:1px solid rgba(48,54,61,.5);font-size:13px}
+tr:hover td{background:rgba(255,255,255,.03)}
+.mono{font-family:'SF Mono','Fira Code',monospace;font-size:12px}

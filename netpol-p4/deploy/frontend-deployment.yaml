@@ -1,0 +1,74 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netpol-dashboard
+  namespace: netpol-system
+  labels:
+    app: netpol-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netpol-dashboard
+  template:
+    metadata:
+      labels:
+        app: netpol-dashboard
+    spec:
+      containers:
+        - name: netpol-dashboard
+          image: image-registry.openshift-image-registry.svc:5000/netpol-system/netpol-dashboard:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netpol-dashboard
+  namespace: netpol-system
+  labels:
+    app: netpol-dashboard
+spec:
+  selector:
+    app: netpol-dashboard
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: netpol-dashboard
+  namespace: netpol-system
+spec:
+  host: netpol-dashboard.apps.lab.ocp.lan
+  to:
+    kind: Service
+    name: netpol-dashboard
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
