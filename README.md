@@ -14,7 +14,7 @@
 
 **NPI** is a six-layer security observability platform for **OpenShift / Kubernetes clusters** that combines live network flow analysis, statistical and machine-learning anomaly detection, automated NetworkPolicy compliance auditing, and an on-cluster LLM assistant into a single intelligence layer sitting on top of **OVN-Kubernetes**.
 
-Rather than relying on a human to manually inspect `NetworkPolicy` YAML for security gaps, or to eyeball dashboards for suspicious traffic, NPI watches cluster-native signals OVN ACL drop logs, live `NetworkPolicy` objects, and time-series flow statistics and turns them into structured findings, ranked anomalies, and plain-English explanations a security engineer can act on immediately.
+Rather than relying on a human to manually inspect `NetworkPolicy` YAML for security gaps, or to eyeball dashboards for suspicious traffic, NPI watches cluster-native signals  OVN ACL drop logs, live `NetworkPolicy` objects, and time-series flow statistics and turns them into structured findings, ranked anomalies, and plain-English explanations a security engineer can act on immediately.
 
 This project was developed as a **PFE (End-of-Study Engineering Project)** at **NextStep IT** (Tunis, Tunisia), in partnership with **TEK-UP University**.
 
@@ -64,7 +64,7 @@ All data is persisted in **TimescaleDB** hypertables and visualized live in **Gr
 | Observability | Fluent Bit, Loki, Prometheus, Grafana 12 |
 | Policy Automation | Kyverno (generate/validate `ClusterPolicy`) |
 | Build | OpenShift `BuildConfig` (`--binary --strategy=docker`) / Docker & Podman |
-| Containers | Docker Hub [`nassimsai`](https://hub.docker.com/u/nassimsai) |
+| Containers | Docker Hub  [`nassimsai`](https://hub.docker.com/u/nassimsai) |
 
 ---
 
@@ -211,7 +211,7 @@ netpol-intelligence/
 |---|---|
 | ![compliance](docs/screenshots/compliance-report.png) | ![assistant](docs/screenshots/ai-assistant.png) |
 
-| Grafana Policy Violations | Anomaly Timeline |
+| Grafana  Policy Violations | Anomaly Timeline |
 |---|---|
 | ![grafana](docs/screenshots/grafana-violations.png) | ![timeline](docs/screenshots/anomaly-timeline.png) |
 
@@ -232,8 +232,8 @@ Full list in [`docs/NPI_Deployment_Runbook.md`](docs/NPI_Deployment_Runbook.md).
 
 - **Nassim Saii**  Final-year Network & System Security Engineering student, TEK-UP University
 
-**Industrial Supervisor:** Mouna Belghith Cloud & Infrastructure Engineer, NextStep IT\
-**Academic Supervisor:** Khaoula Ammar TEK-UP University
+**Industrial Supervisor:** Mouna Belghith  Cloud & Infrastructure Engineer, NextStep IT
+**Academic Supervisor:** Khaoula Ammar  TEK-UP University
 
 Class: Network & System Security Engineering · Academic Year: 2025–2026
 
