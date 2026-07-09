@@ -234,8 +234,8 @@ Full list in [`docs/NPI_Deployment_Runbook.md`](docs/NPI_Deployment_Runbook.md).
 
 - **Nassim Saii** — Final-year Network & System Security Engineering student, TEK-UP University
 
-**Industrial Supervisor:** Mouna belghith — Cloud & Infrastructure engineer, NextStep IT.
-**Academic Supervisor:** Khaoula Ammar — TEK-UP University.
+**Industrial Supervisor:** Mouna belghith — Cloud & Infrastructure engineer, NextStep IT\
+**Academic Supervisor:** Khaoula Ammar — TEK-UP University
 
 Class: Network & System Security Engineering · Academic Year: 2025–2026
 
