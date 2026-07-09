@@ -14,7 +14,7 @@
 
 **NPI** is a six-layer security observability platform for **OpenShift / Kubernetes clusters** that combines live network flow analysis, statistical and machine-learning anomaly detection, automated NetworkPolicy compliance auditing, and an on-cluster LLM assistant into a single intelligence layer sitting on top of **OVN-Kubernetes**.
 
-Rather than relying on a human to manually inspect `NetworkPolicy` YAML for security gaps, or to eyeball dashboards for suspicious traffic, NPI watches cluster-native signals — OVN ACL drop logs, live `NetworkPolicy` objects, and time-series flow statistics — and turns them into structured findings, ranked anomalies, and plain-English explanations a security engineer can act on immediately.
+Rather than relying on a human to manually inspect `NetworkPolicy` YAML for security gaps, or to eyeball dashboards for suspicious traffic, NPI watches cluster-native signals OVN ACL drop logs, live `NetworkPolicy` objects, and time-series flow statistics and turns them into structured findings, ranked anomalies, and plain-English explanations a security engineer can act on immediately.
 
 This project was developed as a **PFE (End-of-Study Engineering Project)** at **NextStep IT** (Tunis, Tunisia), in partnership with **TEK-UP University**.
 
@@ -27,7 +27,7 @@ This project was developed as a **PFE (End-of-Study Engineering Project)** at **
 - Detect anomalous network flows in real time using statistical and ML-based methods
 - Automatically audit Kubernetes `NetworkPolicy` resources against a security rule catalogue
 - Correlate anomalies and policy violations into a single compliance score per namespace
-- Provide natural-language explanations and remediation guidance via an on-cluster LLM — with no data ever leaving the cluster
+- Provide natural-language explanations and remediation guidance via an on-cluster LLM with no data ever leaving the cluster
 - Demonstrate zero-trust NetworkPolicy design on a real bare-metal OpenShift cluster running OVN-Kubernetes
 
 ---
@@ -42,7 +42,7 @@ NPI is built as **six cooperating layers**, deployed as independent microservice
 | 2. Flow Processing | `flow-processor` | Converts raw OVN drop events into structured flow records, builds per-namespace-pair baselines (Welford online algorithm) |
 | 3. Anomaly Detection | `anomaly-detector` | Three-tier detection: Welford/Z-score statistical spikes, deterministic rule matches, and Isolation Forest (scikit-learn) for multivariate outliers |
 | 4. Policy Audit | `audit-engine` | Watches live `NetworkPolicy` objects via the Kubernetes API and evaluates them against an 8-rule security catalogue (NP-001–NP-008) |
-| 5. Intelligence | `llm-service` (Ollama / `llama3.2:3b`) | Generates plain-English explanations, attack-scenario framing, and YAML remediation for findings — fully on-cluster, streamed via SSE |
+| 5. Intelligence | `llm-service` (Ollama / `llama3.2:3b`) | Generates plain-English explanations, attack-scenario framing, and YAML remediation for findings fully on-cluster, streamed via SSE |
 | 6. Presentation | `api-gateway` + `netpol-dashboard` (React 18) | REST + SSE API and a live dashboard: namespace map, anomaly timeline, compliance report, and an LLM-powered chat assistant |
 
 All data is persisted in **TimescaleDB** hypertables and visualized live in **Grafana**.
@@ -64,7 +64,7 @@ All data is persisted in **TimescaleDB** hypertables and visualized live in **Gr
 | Observability | Fluent Bit, Loki, Prometheus, Grafana 12 |
 | Policy Automation | Kyverno (generate/validate `ClusterPolicy`) |
 | Build | OpenShift `BuildConfig` (`--binary --strategy=docker`) / Docker & Podman |
-| Containers | Docker Hub — [`nassimsai`](https://hub.docker.com/u/nassimsai) |
+| Containers | Docker Hub [`nassimsai`](https://hub.docker.com/u/nassimsai) |
 
 ---
 
@@ -84,7 +84,7 @@ Domain: `lab.ocp.lan` · Apps: `*.apps.lab.ocp.lan` · Namespaces: `netpol-syste
 
 ## 🐳 Prebuilt Images
 
-All six services are published as standalone, portable images on Docker Hub — no OpenShift `BuildConfig` required to redeploy elsewhere:
+All six services are published as standalone, portable images on Docker Hub no OpenShift `BuildConfig` required to redeploy elsewhere:
 
 | Service | Image | Description |
 |---|---|---|
@@ -105,7 +105,7 @@ docker pull docker.io/nassimsai/audit-engine:v1.0-pfe2026
 
 ## 🚀 Quick Start
 
-### Option A — Deploy on OpenShift using prebuilt Docker Hub images (recommended)
+### Option A Deploy on OpenShift using prebuilt Docker Hub images (recommended)
 
 ```bash
 git clone https://github.com/nassim-saii/netpol-intelligence.git
@@ -114,7 +114,7 @@ cd netpol-intelligence
 # Create namespaces
 oc apply -f deploy/namespaces.yaml
 
-# Create secrets (fill in your own credentials first — see deploy/secrets.example.yaml)
+# Create secrets (fill in your own credentials first see deploy/secrets.example.yaml)
 oc apply -f deploy/secrets.yaml
 
 # Deploy TimescaleDB, Kyverno policies, and all six services
@@ -129,15 +129,15 @@ oc rollout status deployment/netpol-dashboard -n netpol-system
 
 Full step-by-step instructions (including Ollama model pull, Grafana dashboard import, and Kyverno setup) are in [`NPI_Deployment_Runbook.md`](docs/NPI_Deployment_Runbook.md).
 
-### Option B — Build from source inside OpenShift (original air-gap-capable pipeline)
+### Option B Build from source inside OpenShift (original air-gap-capable pipeline)
 
 ```bash
 oc new-build --name=audit-engine --binary --strategy=docker -n netpol-system
 oc start-build audit-engine --from-dir=services/audit-engine/ --follow
-# repeat per service — see docs/NPI_Deployment_Runbook.md, Section 3
+# repeat per service see docs/NPI_Deployment_Runbook.md, Section 3
 ```
 
-> ℹ️ Option A trades the original air-gap build guarantee for portability — the images are built with internet access and pushed to Docker Hub, but the resulting deployment needs no OpenShift-internal build step and can be redeployed on any cluster with a `docker pull`.
+> ℹ️ Option A trades the original air-gap build guarantee for portability  the images are built with internet access and pushed to Docker Hub, but the resulting deployment needs no OpenShift-internal build step and can be redeployed on any cluster with a `docker pull`.
 
 ---
 
@@ -168,7 +168,7 @@ Findings feed a per-namespace **compliance score**: `100 − (CRITICAL×20 + HIG
 | Port-scan detection latency | 98 s |
 | Audit rule evaluation latency | < 10 s |
 | End-to-end test scenarios passed | 8 / 8 |
-| Isolation Forest — first live detection | score −0.5004, trained on 8 samples |
+| Isolation Forest first live detection | score −0.5004, trained on 8 samples |
 
 ---
 
@@ -211,7 +211,7 @@ netpol-intelligence/
 |---|---|
 | ![compliance](docs/screenshots/compliance-report.png) | ![assistant](docs/screenshots/ai-assistant.png) |
 
-| Grafana — Policy Violations | Anomaly Timeline |
+| Grafana Policy Violations | Anomaly Timeline |
 |---|---|
 | ![grafana](docs/screenshots/grafana-violations.png) | ![timeline](docs/screenshots/anomaly-timeline.png) |
 
@@ -219,9 +219,9 @@ netpol-intelligence/
 
 ## ⚠️ Known Operational Behaviours
 
-- `oc start-build` does **not** auto-cycle running pods — always follow with `oc rollout restart`
+- `oc start-build` does **not** auto-cycle running pods always follow with `oc rollout restart`
 - Ollama deployment strategy must be `Recreate` (two 10+ vCPU pods cannot coexist on one node)
-- OVN-Kubernetes evaluates DNS post-DNAT — allow **both** ports 53 and 5353 in egress rules
+- OVN-Kubernetes evaluates DNS post-DNAT allow **both** ports 53 and 5353 in egress rules
 - OCP Router ingress NetworkPolicies require **two** separate `from:` entries (namespace-name selector *and* `policy-group=ingress`)
 
 Full list in [`docs/NPI_Deployment_Runbook.md`](docs/NPI_Deployment_Runbook.md).
@@ -230,10 +230,10 @@ Full list in [`docs/NPI_Deployment_Runbook.md`](docs/NPI_Deployment_Runbook.md).
 
 ## 👨‍🎓 Authors & Supervision
 
-- **Nassim Saii** — Final-year Network & System Security Engineering student, TEK-UP University
+- **Nassim Saii**  Final-year Network & System Security Engineering student, TEK-UP University
 
-**Industrial Supervisor:** Mouna Belghith — Cloud & Infrastructure Engineer, NextStep IT\
-**Academic Supervisor:** Khaoula Ammar — TEK-UP University
+**Industrial Supervisor:** Mouna Belghith Cloud & Infrastructure Engineer, NextStep IT\
+**Academic Supervisor:** Khaoula Ammar TEK-UP University
 
 Class: Network & System Security Engineering · Academic Year: 2025–2026
 
