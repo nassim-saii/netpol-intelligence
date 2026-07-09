@@ -19,7 +19,7 @@ Rather than relying on a human to manually inspect `NetworkPolicy` YAML for secu
 This project was developed as a **PFE (End-of-Study Engineering Project)** at **NextStep IT** (Tunis, Tunisia), in partnership with **TEK-UP University**.
 
 [![dashboard-preview](docs/screenshots/dashboard-overview.png)](docs/screenshots/dashboard-overview.png)
-*(add a dashboard screenshot here once available)*
+
 
 ---
 
@@ -49,7 +49,7 @@ NPI is built as **six cooperating layers**, deployed as independent microservice
 All data is persisted in **TimescaleDB** hypertables and visualized live in **Grafana**.
 
 [![architecture-diagram](docs/diagrams/npi-architecture.png)](docs/diagrams/npi-architecture.png)
-*(add the six-layer architecture diagram here — see `docs/diagrams/`)*
+
 
 ---
 
