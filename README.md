@@ -20,7 +20,6 @@ This project was developed as a **PFE (End-of-Study Engineering Project)** at **
 
 [![dashboard-preview](docs/screenshots/dashboard-overview.png)](docs/screenshots/dashboard-overview.png)
 
-
 ---
 
 ## 🎯 Objectives
@@ -44,12 +43,11 @@ NPI is built as **six cooperating layers**, deployed as independent microservice
 | 3. Anomaly Detection | `anomaly-detector` | Three-tier detection: Welford/Z-score statistical spikes, deterministic rule matches, and Isolation Forest (scikit-learn) for multivariate outliers |
 | 4. Policy Audit | `audit-engine` | Watches live `NetworkPolicy` objects via the Kubernetes API and evaluates them against an 8-rule security catalogue (NP-001–NP-008) |
 | 5. Intelligence | `llm-service` (Ollama / `llama3.2:3b`) | Generates plain-English explanations, attack-scenario framing, and YAML remediation for findings — fully on-cluster, streamed via SSE |
-| 6. Presentation | `api-gateway` + `netpol-dashboard` (React 18) | REST + SSE API and a live dashboard: anomaly timeline, policy graph, compliance report, and an LLM-powered chat assistant |
+| 6. Presentation | `api-gateway` + `netpol-dashboard` (React 18) | REST + SSE API and a live dashboard: namespace map, anomaly timeline, compliance report, and an LLM-powered chat assistant |
 
 All data is persisted in **TimescaleDB** hypertables and visualized live in **Grafana**.
 
 [![architecture-diagram](docs/diagrams/npi-architecture.png)](docs/diagrams/npi-architecture.png)
-
 
 ---
 
@@ -62,7 +60,7 @@ All data is persisted in **TimescaleDB** hypertables and visualized live in **Gr
 | ML / Stats | scikit-learn (Isolation Forest), NumPy, Welford's online algorithm |
 | LLM | Ollama, `llama3.2:3b` (Q4 quantized, CPU-only inference) |
 | Database | TimescaleDB (PostgreSQL + hypertables) |
-| Frontend | React 18, Vite, D3.js (force-directed policy graph), Recharts |
+| Frontend | React 18, Vite, Recharts |
 | Observability | Fluent Bit, Loki, Prometheus, Grafana 12 |
 | Policy Automation | Kyverno (generate/validate `ClusterPolicy`) |
 | Build | OpenShift `BuildConfig` (`--binary --strategy=docker`) / Docker & Podman |
@@ -200,9 +198,9 @@ netpol-intelligence/
 
 | Tab | Component | Highlights |
 |---|---|---|
+| Namespace Map | `App.jsx` | Live per-namespace risk overview: pods, flows, active violations |
 | Anomaly Timeline | `AnomalyTimeline.jsx` | Live anomaly feed with severity coloring |
-| Policy Graph | `PolicyGraph.jsx` | D3 force-directed NetworkPolicy relationship graph |
-| Compliance | `ComplianceReport.jsx` | Score circle (0–100 %), grade (A–F), severity breakdown |
+| Compliance | `ComplianceReport.jsx` | Score circle (0–100 %), grade (A–F), severity breakdown (Recharts) |
 | Assistant | `Chat.jsx` | Streaming SSE chatbot powered by `llama3.2:3b`, live cluster context |
 
 ---
@@ -234,7 +232,7 @@ Full list in [`docs/NPI_Deployment_Runbook.md`](docs/NPI_Deployment_Runbook.md).
 
 - **Nassim Saii** — Final-year Network & System Security Engineering student, TEK-UP University
 
-**Industrial Supervisor:** Mouna belghith — Cloud & Infrastructure engineer, NextStep IT\
+**Industrial Supervisor:** Mouna Belghith — Cloud & Infrastructure Engineer, NextStep IT
 **Academic Supervisor:** Khaoula Ammar — TEK-UP University
 
 Class: Network & System Security Engineering · Academic Year: 2025–2026
