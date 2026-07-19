@@ -46,17 +46,10 @@ def check_allow_all_egress(namespace, policies):
     for p in policies:
         if p.spec.egress:
             for rule in p.spec.egress:
-                no_peer = rule.to is None or rule.to == []
-                no_ports = rule.ports is None or rule.ports == []
-                if no_peer and no_ports:
+                if rule.to is None or rule.to == []:
                     findings.append(AuditFinding(rule_id="NP-003", namespace=namespace,
                         severity="HIGH",
                         message=f"Policy {p.metadata.name} allows ALL egress",
-                        policy_name=p.metadata.name))
-                elif no_peer and not no_ports:
-                    findings.append(AuditFinding(rule_id="NP-003", namespace=namespace,
-                        severity="MEDIUM",
-                        message=f"Policy {p.metadata.name} allows egress to ANY destination on restricted ports (no peer selector)",
                         policy_name=p.metadata.name))
     return findings
 

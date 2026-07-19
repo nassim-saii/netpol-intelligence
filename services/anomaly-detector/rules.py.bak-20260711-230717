@@ -33,11 +33,7 @@ RULES = [
         "check": lambda f: (
             f.verdict == "drop" and
             f.dst_port not in NOISE_PORTS and
-            f.src_namespace not in {"kube-system", "openshift-monitoring"} and
-            # Exclude flows already caught by ANOM-001 (control plane access)
-            not (f.dst_port in SENSITIVE_PORTS and f.src_namespace not in SENSITIVE_NAMESPACES) and
-            # Exclude flows already caught by ANOM-003 (external egress)
-            not (f.dst_ip != "" and not f.dst_ip.startswith(("10.", "172.", "192.168.")) and f.dst_port not in {53, 123, 443, 80})
+            f.src_namespace not in {"kube-system", "openshift-monitoring"}
         )
     },
     {

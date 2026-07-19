@@ -319,6 +319,22 @@ def main():
                     time.sleep(10)
         except Exception as e:
             log.error("Unexpected error: %s", e, exc_info=True)
+            try:
+                conn.rollback()
+                log.info("Rolled back aborted transaction — connection recovered")
+            except Exception as rollback_err:
+                log.error("Rollback also failed: %s — forcing reconnect", rollback_err)
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                conn = None
+                while conn is None:
+                    try:
+                        conn = get_conn()
+                    except Exception as e2:
+                        log.error("Reconnect failed: %s — retry in 10s", e2)
+                        time.sleep(10)
 
         time.sleep(POLL_INTERVAL)
 

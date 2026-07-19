@@ -836,7 +836,9 @@ NP-007: Overlapping podSelector conflict between policies | MEDIUM
 NP-008: Egress policies without explicit DNS port 53/5353 | LOW
 ANOM-001: Access to control plane port 6443 from app namespace | CRITICAL
 ANOM-002: Unexpected OVN ACL drop -- possible NetworkPolicy gap | HIGH
-ZSCORE-001: Statistical traffic spike (Welford Z-score > 3) | varies
+ANOM-003: Unexpected external egress dropped | MEDIUM
+ZSCORE: Statistical traffic spike (Welford Z-score > 3) | varies
+IFOREST: ML-based traffic pattern anomaly (Isolation Forest) | MEDIUM
 {web_context}"""
 
     # ── Build full prompt with history ────────────────────────────────────

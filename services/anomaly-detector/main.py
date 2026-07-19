@@ -143,7 +143,7 @@ def poll_and_detect(conn):
                         severity = "HIGH" if z > 5 else "MEDIUM"
                         cur.execute("""
                             SELECT 1 FROM anomaly_events
-                            WHERE rule_id = 'ZSCORE-001' AND src_namespace = %s
+                            WHERE rule_id = 'ZSCORE' AND src_namespace = %s
                               AND dst_namespace = %s AND dst_port = %s
                               AND time > NOW() - INTERVAL '1 hour'
                             LIMIT 1
@@ -155,7 +155,7 @@ def poll_and_detect(conn):
                                    dst_port, z_score, anomaly_score, severity, description)
                                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                             """, (
-                                now, "TRAFFIC_SPIKE", "ZSCORE-001",
+                                now, "TRAFFIC_SPIKE", "ZSCORE",
                                 src_ns, dst_ns, dst_port,
                                 round(z, 2), round(z, 2), severity,
                                 f"Traffic spike: {count:.0f} drops (mean={mean:.1f}, std={std:.1f}, z={z:.2f})"
@@ -197,7 +197,7 @@ def poll_and_detect(conn):
                     if score < IFOREST_THRESHOLD:
                         cur.execute("""
                             SELECT 1 FROM anomaly_events
-                            WHERE rule_id = 'IFOREST-001'
+                            WHERE rule_id = 'IFOREST'
                               AND src_namespace = %s AND dst_namespace = %s
                               AND dst_port = %s
                               AND time > NOW() - INTERVAL '1 hour'
@@ -209,7 +209,7 @@ def poll_and_detect(conn):
                                   (time, anomaly_type, rule_id,
                                    src_namespace, dst_namespace, dst_port,
                                    anomaly_score, severity, description)
-                                VALUES (%s,'ML_IFOREST','IFOREST-001',%s,%s,%s,%s,%s,%s)
+                                VALUES (%s,'ML_IFOREST','IFOREST',%s,%s,%s,%s,%s,%s)
                             """, (
                                 now, src_ns, dst_ns, dst_port,
                                 round(score, 4), "MEDIUM",
@@ -269,6 +269,22 @@ def main():
                     time.sleep(10)
         except Exception as e:
             log.error("Unexpected error: %s", e, exc_info=True)
+            try:
+                conn.rollback()
+                log.info("Rolled back aborted transaction — connection recovered")
+            except Exception as rollback_err:
+                log.error("Rollback also failed: %s — forcing reconnect", rollback_err)
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                conn = None
+                while conn is None:
+                    try:
+                        conn = get_conn()
+                    except Exception as e2:
+                        log.error("Reconnect failed: %s — retry in 10s", e2)
+                        time.sleep(10)
         time.sleep(POLL_INTERVAL)
 
 
