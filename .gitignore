@@ -5,3 +5,6 @@ pull-secret.txt
 .env
 **/node_modules/
 **/__pycache__/
+*.bak
+*.bak-*
+*.bk
